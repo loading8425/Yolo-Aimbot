@@ -158,6 +158,10 @@ VK_CODE = {
     "'":0xDE,
     '`':0xC0}
 
+# global variables
+global_queue = queue.LifoQueue()
+threads = []
+
 class POINT(Structure):
     _fields_ = [("x", c_ulong),("y", c_ulong)]
 
@@ -220,48 +224,17 @@ def get_resolution():
     h = win32api.GetSystemMetrics(1)
     return w,h
 
-def mouse_left_listen(event):
-    if (event.MessageName != "mouse move"):  # 因为鼠标一动就会有很多mouse move，所以把这个过滤下
-        global i
-        i = i + 1
-        print('第{:3d}次：按下鼠标左键我就会出现，嘻嘻'.format(i))
+# mouse down queue front=1
+def on_left_down_event(event):
+    print(event.MessageName)
+    global_queue.put(1)
     return True
 
-def change_script(main_queue):
-    while True:
-        if key_event_listen(0x70):
-            print("change script AK47")
-            main_queue.put('AK47')
-            time.sleep(0.1)
-        elif key_event_listen(0x71):
-            print("change script M4A4")
-            main_queue.put('M4A4')
-            time.sleep(0.1)
-        elif key_event_listen(0x21):
-            print("exit")
-            main_queue.put('exit')
-            print(main_queue.queue)
-            return
-
-def AK47_Script():
-    while True:
-        pass
-
-def main():
-    # listen keyboard event
-    exitQ = queue.LifoQueue()
-    t1 = threading.Thread(target=change_script, args=(exitQ,), daemon=True)
-    t1.start()
-    
-    hm = pyHook.HookManager()
-    hm.MouseLeftDown = mouse_left_listen
-    pythoncom.PumpMessages()
-    
-    while True:
-        # exit if page Up press down
-        if not exitQ.empty() and exitQ.queue[exitQ.qsize() - 1] =='exit':
-            win32api.PostQuitMessage()
-            sys.exit(0)
+# mouse up queue front=0
+def on_left_up_event(event):
+    print(event.MessageName)
+    global_queue.put(0)
+    return True
 
 def onKeyboardEvent(event):
     print("onKeyboardEvent")
@@ -272,19 +245,43 @@ def onKeyboardEvent(event):
     windowName = windowTitle.value.decode('gbk')
     print("当前您处于%s窗口" % windowName)
     print("当前窗口所属进程id %d" % pid.value)
-    print("当前刚刚按下了%s键" % str(event.Ascii))
+    
+    # quit program when click Page Up
+    if event.Key == "Prior":
+        win32api.PostQuitMessage()
+        print("Hello")
     return True
 
 def onMouseEvent(event):
-    if(event.MessageName!="mouse move"):
+    if(event.MessageName == "mouse move"):
         print(event.MessageName)
     return True
+
+def Script_Start():
+    while True:
+        if not global_queue.empty() and global_queue.queue[global_queue.qsize()-1] == 1:
+            global_queue.get()
+            while True:
+                if not global_queue.empty() and global_queue.queue[global_queue.qsize()-1] == 0:
+                    global_queue.get()
+                    break
+                
+                # Recoil scripts
+                x,y = get_mouse_point()
+                mouse_move(x,y+4)
+                time.sleep(0.01)
+                
+        time.sleep(0.01)
+
+main_thread = threading.Thread(target=Script_Start,daemon=True)
+main_thread.start()
 
 hm = pyHook.HookManager()
 hm.KeyDown = onKeyboardEvent
 hm.HookKeyboard()
-hm.MouseAll = onMouseEvent
+#hm.MouseAll = onMouseEvent
+hm.MouseLeftDown = on_left_down_event
+hm.MouseLeftUp = on_left_up_event
 hm.HookMouse()
 pythoncom.PumpMessages()
 
-#main()
