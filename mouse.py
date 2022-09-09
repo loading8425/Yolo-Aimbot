@@ -4,6 +4,11 @@ import win32gui
 from ctypes import *
 import time
 import pyautogui
+import threading
+import sys
+import queue
+import PyHook3 as pyHook
+import pythoncom
 
 VK_CODE = {
     'backspace':0x08,
@@ -204,12 +209,82 @@ def key_input(str=''):
 def mouse_smooth_move(x, y, speed):
     pyautogui.moveTo(x,y,speed-1)
 
-# detect mouse
-def mouse_event_listen(key):
+# detect key event
+def key_event_listen(key):
     state_left = win32api.GetKeyState(key)
-    time.sleep(0.1)
+    time.sleep(0.01)
     return state_left < 0
 
+def get_resolution():
+    w = win32api.GetSystemMetrics(0)
+    h = win32api.GetSystemMetrics(1)
+    return w,h
 
-while(True):
-    print(mouse_event_listen(0x01))
+def mouse_left_listen(event):
+    if (event.MessageName != "mouse move"):  # 因为鼠标一动就会有很多mouse move，所以把这个过滤下
+        global i
+        i = i + 1
+        print('第{:3d}次：按下鼠标左键我就会出现，嘻嘻'.format(i))
+    return True
+
+def change_script(main_queue):
+    while True:
+        if key_event_listen(0x70):
+            print("change script AK47")
+            main_queue.put('AK47')
+            time.sleep(0.1)
+        elif key_event_listen(0x71):
+            print("change script M4A4")
+            main_queue.put('M4A4')
+            time.sleep(0.1)
+        elif key_event_listen(0x21):
+            print("exit")
+            main_queue.put('exit')
+            print(main_queue.queue)
+            return
+
+def AK47_Script():
+    while True:
+        pass
+
+def main():
+    # listen keyboard event
+    exitQ = queue.LifoQueue()
+    t1 = threading.Thread(target=change_script, args=(exitQ,), daemon=True)
+    t1.start()
+    
+    hm = pyHook.HookManager()
+    hm.MouseLeftDown = mouse_left_listen
+    pythoncom.PumpMessages()
+    
+    while True:
+        # exit if page Up press down
+        if not exitQ.empty() and exitQ.queue[exitQ.qsize() - 1] =='exit':
+            win32api.PostQuitMessage()
+            sys.exit(0)
+
+def onKeyboardEvent(event):
+    print("onKeyboardEvent")
+    pid = c_ulong(0)
+    windowTitle = create_string_buffer(512)
+    windll.user32.GetWindowTextA(event.Window, byref(windowTitle), 512)
+    windll.user32.GetWindowThreadProcessId(event.Window, byref(pid))
+    windowName = windowTitle.value.decode('gbk')
+    print("当前您处于%s窗口" % windowName)
+    print("当前窗口所属进程id %d" % pid.value)
+    print("当前刚刚按下了%s键" % str(event.Ascii))
+    return True
+
+def onMouseEvent(event):
+    if(event.MessageName!="mouse move"):
+        print(event.MessageName)
+    return True
+
+hm = pyHook.HookManager()
+hm.KeyDown = onKeyboardEvent
+hm.HookKeyboard()
+hm.MouseAll = onMouseEvent
+hm.HookMouse()
+pythoncom.PumpMessages()
+
+#main()
