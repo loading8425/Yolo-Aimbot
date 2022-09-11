@@ -1,3 +1,4 @@
+from pickle import FALSE
 import win32api
 import win32con
 import win32gui
@@ -9,6 +10,8 @@ import sys
 import queue
 import PyHook3 as pyHook
 import pythoncom
+import pydirectinput
+import multiprocessing
 
 VK_CODE = {
     'backspace':0x08,
@@ -158,10 +161,6 @@ VK_CODE = {
     "'":0xDE,
     '`':0xC0}
 
-# global variables
-global_queue = queue.LifoQueue()
-threads = []
-
 class POINT(Structure):
     _fields_ = [("x", c_ulong),("y", c_ulong)]
 
@@ -224,64 +223,23 @@ def get_resolution():
     h = win32api.GetSystemMetrics(1)
     return w,h
 
-# mouse down queue front=1
-def on_left_down_event(event):
-    print(event.MessageName)
-    global_queue.put(1)
-    return True
-
-# mouse up queue front=0
-def on_left_up_event(event):
-    print(event.MessageName)
-    global_queue.put(0)
-    return True
-
-def onKeyboardEvent(event):
-    print("onKeyboardEvent")
-    pid = c_ulong(0)
-    windowTitle = create_string_buffer(512)
-    windll.user32.GetWindowTextA(event.Window, byref(windowTitle), 512)
-    windll.user32.GetWindowThreadProcessId(event.Window, byref(pid))
-    windowName = windowTitle.value.decode('gbk')
-    print("当前您处于%s窗口" % windowName)
-    print("当前窗口所属进程id %d" % pid.value)
-    
-    # quit program when click Page Up
-    if event.Key == "Prior":
-        win32api.PostQuitMessage()
-        print("Hello")
-    return True
-
 def onMouseEvent(event):
     if(event.MessageName == "mouse move"):
         print(event.MessageName)
     return True
 
-def Script_Start():
-    while True:
-        if not global_queue.empty() and global_queue.queue[global_queue.qsize()-1] == 1:
-            global_queue.get()
-            while True:
-                if not global_queue.empty() and global_queue.queue[global_queue.qsize()-1] == 0:
-                    global_queue.get()
-                    break
-                
-                # Recoil scripts
-                x,y = get_mouse_point()
-                mouse_move(x,y+4)
-                time.sleep(0.01)
-                
+
+def AK47():
+    i = 50
+    while i>=0:
+        pydirectinput.move(0, 3,relative=True, duration=0.1, _pause=False)
+        i-=1
+        time.sleep(0.01)
+    
+    i = 50
+    while i>=0:
+        pydirectinput.move(-1, 0,relative=True, duration=0.1, _pause=False)
+        i-=1
         time.sleep(0.01)
 
-main_thread = threading.Thread(target=Script_Start,daemon=True)
-main_thread.start()
-
-hm = pyHook.HookManager()
-hm.KeyDown = onKeyboardEvent
-hm.HookKeyboard()
-#hm.MouseAll = onMouseEvent
-hm.MouseLeftDown = on_left_down_event
-hm.MouseLeftUp = on_left_up_event
-hm.HookMouse()
-pythoncom.PumpMessages()
 
