@@ -1,0 +1,41 @@
+无涯键鼠盒子模块更新说明
+
+V5.32(2022.9.12)
+1.修复进程内注册的bug
+
+V5.31(2022.6.25)
+1.修复HKMSearchDevice2和SearchDevice2的bug
+
+V5.30(2022.6.17)
+1.增加设置鼠标速度函数：HKMSetMouseSpeed、SetMouseSpeed
+2.HKMSetMode和SetMode增加设置延时是否处理窗口消息的方式
+3.HKMSetMode和SetMode的鼠标移动方式增加几种移动模式
+
+V5.20(2022.3.19)
+1.增加查找全部设备的函数：HKMSearchDeviceAll、SearchDeviceAll
+2.增加获得设备字符串的函数：HKMGetDevString、GetDevString
+3.增加数据处理的函数：HKMGetDataCount、HKMGetDataUnitInt
+
+V5.10(2022.2.20)
+1.增加对盒子基础版二代的支持
+2.增加获得设备信息的函数：HKMGetDevInfo、GetDevInfo
+3.增加判断键盘鼠标键按下的函数：HKMIsKeyDown、HKMIsMouseButtonDown、IsKeyDown、IsMouseButtonDown
+4.增加新的验证函数：HKMVerifyUserData2、VerifyUserData2
+5.增加设置复位时间：HKMSetResetTime、SetResetTime
+
+V5.01(2021.5.4)
+1.修复鼠标移动的bug
+
+V5.00(2021.4.18)
+1.改进对DPI支持，相关的变化有：
+　　(1)删除的函数：HKMDisableDpi、HKMIsDisableDpi、DisableDpi、IsDisableDpi
+　　(2)增加参数的函数：HKMOpen、HKMOpen2、Open、Open2
+　　(3)参数有改变的函数：HKMSetMode、SetMode
+2.修复一些bug
+
+V3.52(2020.11.29)
+1.修正进程内注册的bug
+2.解决部分安全软件误报的问题
+
+V3.51(2020.11.5)
+1.增加64位模块
