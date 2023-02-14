@@ -5,28 +5,36 @@ from PyQt5.QtGui import QPixmap
 from PyQt5.QtCore import QTimer
 import sys
 import numpy
+from multiprocessing import Queue
 
-class Window(QMainWindow):
-
+class WindowCap():
     def __init__(self):
+        self.camera = dxcam.create()
+        self.camera.start()
+
+    def get_screen_shot(self):
+        return self.camera.get_latest_frame()
+
+class GUI(QMainWindow):
+    def __init__(self, img_queue:Queue):
         super().__init__()
+        self.img_queue = img_queue
         self.setWindowTitle("Title")
         self.label = QLabel(self)
         self.central_widget = QWidget()               
         self.setCentralWidget(self.central_widget)    
         self.lay = QVBoxLayout(self.central_widget)
 
-        # Grab screen
-        self.camera = dxcam.create()
-        self.camera.start()
         # set callback timer
         self.qTimer = QTimer()
-        self.qTimer.setInterval(10)
+        self.qTimer.setInterval(100)
         self.qTimer.timeout.connect(self.update)
         self.qTimer.start()
 
     def update(self):
-        self.show_img(self.camera.get_latest_frame())
+        if not self.img_queue.empty():
+            img = self.img_queue.get()
+            self.show_img(img)
 
     def show_img(self, img:numpy.ndarray):
         qimage = QtGui.QImage(img[:], img.shape[1],img.shape[0], img.shape[1] * 3, QtGui.QImage.Format_RGB888)

@@ -57,7 +57,7 @@ class HKM_Mouse:
             VID (int32): Mouse Box VID
             PID (int32): Mouse Box PID
         """
-        hkmdll = windll.LoadLibrary("./wyhkm/x64/wyhkm.dll")
+        hkmdll = windll.LoadLibrary(r".\3rd-requirements\wyhkm\x64\wyhkm.dll")
         hkmdll.DllInstall.argtypes=(c_long,c_longlong)
         if hkmdll.DllInstall(1,2)<0:
             print("Fail to register!")
@@ -148,3 +148,8 @@ class HKM_Mouse:
         """ Set mouse speed from 5 to 100, default is 45 """
         return self.wyhkm.SetMouseSpeed(speed)
 
+
+#test
+# mouse = HKM_Mouse(0x1E71,0x2022)
+# mouse.set_mouse_speed(5)
+# mouse.move_To(1000,1000)
