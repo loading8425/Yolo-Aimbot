@@ -1,0 +1,2 @@
+1. Add swig.exe to PATH
+2. pip install PyHook3

@@ -4,7 +4,7 @@ from PyQt5.QtWidgets import QApplication
 import sys
 import time
 from multiprocessing import Queue
-
+import pythoncom
 
 def gui(message_queue):
     app = QApplication(sys.argv)
