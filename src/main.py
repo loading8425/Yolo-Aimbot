@@ -5,17 +5,22 @@ import sys
 import time
 from multiprocessing import Queue
 import pythoncom
+import sharedmem
+import numpy
+import dxcam
 
-def gui(message_queue):
+
+def gui(message_queue, sharedMem):
     app = QApplication(sys.argv)
-    ex = WindowCapture.GUI(message_queue)
+    ex = WindowCapture.GUI(message_queue, sharedMem)
     ex.show()
     sys.exit(app.exec_())
 
-def screen_cap(message_queue):
+def screen_cap(message_queue, sharedMem):
     cam = WindowCapture.WindowCap()
     while True:
-        message_queue.put(cam.get_screen_shot())
+        img = cam.get_screen_shot()
+        sharedMem[:] = img.copy()
 
 if __name__ == '__main__':
     message_queue = Queue()
@@ -25,4 +30,6 @@ if __name__ == '__main__':
     cam_process.start()
     time.sleep(3)
     print("end")
+    gui_process.join()
+    cam_process.join()
     

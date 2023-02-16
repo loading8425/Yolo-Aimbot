@@ -16,9 +16,10 @@ class WindowCap():
         return self.camera.get_latest_frame()
 
 class GUI(QMainWindow):
-    def __init__(self, img_queue:Queue):
+    def __init__(self, message_queue:Queue, sharedMemImg):
         super().__init__()
-        self.img_queue = img_queue
+        self.message_queue = message_queue
+        self.sharedMemImg = sharedMemImg
         self.setWindowTitle("Title")
         self.label = QLabel(self)
         self.central_widget = QWidget()               
@@ -32,11 +33,9 @@ class GUI(QMainWindow):
         self.qTimer.start()
 
     def update(self):
-        if not self.img_queue.empty():
-            img = self.img_queue.get()
-            self.show_img(img)
+        self.show_img(self.sharedMemImg)
 
-    def show_img(self, img:numpy.ndarray):
+    def show_img(self, img):
         qimage = QtGui.QImage(img[:], img.shape[1],img.shape[0], img.shape[1] * 3, QtGui.QImage.Format_RGB888)
         qPixMap = QPixmap.fromImage(qimage).scaled(1440, 800)
         self.label.setPixmap(qPixMap)
