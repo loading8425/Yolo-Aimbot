@@ -1,3 +1,4 @@
+import time
 import dxcam
 from PyQt5 import QtGui
 from PyQt5.QtWidgets import QLabel, QMainWindow, QApplication, QWidget, QVBoxLayout
@@ -10,7 +11,7 @@ from multiprocessing import Queue
 class WindowCap():
     def __init__(self):
         self.camera = dxcam.create()
-        self.camera.start()
+        self.camera.start(target_fps=140)
 
     def get_screen_shot(self):
         return self.camera.get_latest_frame()
@@ -42,8 +43,15 @@ class GUI(QMainWindow):
         self.lay.addWidget(self.label)
 
 # test run
-# if __name__ == '__main__':
-#     app = QApplication(sys.argv)
-#     ex = Window()
-#     ex.show()
-#     sys.exit(app.exec_())
+if __name__ == '__main__':
+    # app = QApplication(sys.argv)
+    # ex = Window()
+    # ex.show()
+    # sys.exit(app.exec_())
+    cam = dxcam.create()
+    while True:
+        t1 = time.time()
+        img = cam.grab()
+        print(img)
+        t2 = time.time() - t1
+        print(1/t2)

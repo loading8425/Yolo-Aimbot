@@ -13,19 +13,22 @@ yolov5-7.0
 		--utils				# 自己开发的小工具  （视频提取图片、自动标注图片、调整图片分辨率）
 		game-plug-in.py		# 主程序
 """
+import sys
 import os
+sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
+import dxcam
 import cv2
 import win32con
 import win32gui
 import time
 import numpy as np
-from multiprocessing import set_start_method, Queue, Process
+from multiprocessing import Queue, Process
 
 from game_plug_in.function.object_detction import load_model, interface_img
-from game_plug_in.function.grab_screen import grab_screen_win32_v2, update_hwnd_title, grab_screen_pyqt_v2
+from game_plug_in.function.grab_screen import grab_screen_win32_v2, update_hwnd_title, grab_screen_pyqt_v2, grab_screen_info, grab_screen_dxcam
 from game_plug_in.function.mouse_controller import mouse_ctrl_func
 from game_plug_in.function.config import *
-
+from game_plug_in.python_trt import Detector
 
 def send_nearest_pos_to_mouse_ctrl(box_list, queue):
     if len(box_list) == 0:
@@ -36,7 +39,7 @@ def send_nearest_pos_to_mouse_ctrl(box_list, queue):
         if _box[0] not in show_list:
             continue
         x_center = _box[1] * grab_width
-        y_center = _box[2] * grab_height
+        y_center = _box[2] * grab_height - 20
         if (x_center - grab_width / 2) ** 2 + (y_center - grab_height / 2) ** 2 < dis_min:
             dis_min = (x_center - grab_width / 2) ** 2 + (y_center - grab_height / 2) ** 2
             pos_min = ((x_center - grab_width / 2), (y_center - grab_height / 2))
@@ -71,9 +74,16 @@ def draw_fps(img, fps_tag, fps_list):
         fps_list.append(timer)
     cv2.putText(img, str(int(1 / np.mean(fps_list))), (20, 40), cv2.FONT_HERSHEY_COMPLEX, 0.8, (0, 0, 255), 2)
     return img
+def get_fps(fps_tag, fps_list):
+    timer = time.time() - fps_tag
+    if len(fps_list) > 10:
+        fps_list.pop(0)
+        fps_list.append(timer)
+    else:
+        fps_list.append(timer)
+    return int(1 / np.mean(fps_list))
 
-
-def detect_img(queue):
+def detect_img(queue:Queue):
     # --- --- --- --- --- --- --- --- --- --- --- --- --- --- --- #
     # 0. 初始化
     # --- --- --- --- --- --- --- --- --- --- --- --- --- --- --- #
@@ -84,25 +94,31 @@ def detect_img(queue):
     # 1. 加载模型
     # --- --- --- --- --- --- --- --- --- --- --- --- --- --- --- #
     model = load_model()
-
+    detector = Detector(model_path=b"./yolov5.engine",dll_path="./yolov5.dll")  # b'' is needed
+    # 加载dxcam
+    cam = dxcam.create(output_idx=0, output_color="RGB")
+    left, top, right, bottom = grab_screen_info()
+    #cam.start(region=(left, top, right, bottom))
     while True:
         fps_tag = time.time()
         # --- --- --- --- --- --- --- --- --- --- --- --- --- --- --- #
         # 2. 截图
         # --- --- --- --- --- --- --- --- --- --- --- --- --- --- --- #
-        img = grab_screen_win32_v2(window_title=grab_window_title, grab_rect=grab_rectangle)
+        #img = grab_screen_win32_v2(window_title=grab_window_title, grab_rect=grab_rectangle)
         # img = grab_screen_pyqt_v2(window_title=grab_window_title, grab_rect=grab_rectangle)
-
+        img = grab_screen_dxcam(cam, (left, top, right, bottom))
         # --- --- --- --- --- --- --- --- --- --- --- --- --- --- --- #
         # 3. 物体检测
         # --- --- --- --- --- --- --- --- --- --- --- --- --- --- --- #
-        box_list = interface_img(img, model)
-
+        if img is None:
+            continue
+        box_list = interface_img(img, model)    
+        box_list2 = detector.predict(img)
+        print(box_list2)
         # --- --- --- --- --- --- --- --- --- --- --- --- --- --- --- #
         # 4. 发送最近坐标
         # --- --- --- --- --- --- --- --- --- --- --- --- --- --- --- #
         send_nearest_pos_to_mouse_ctrl(box_list, queue)
-
         if is_show_top_window:
             # --- --- --- --- --- --- --- --- --- --- --- --- --- --- --- #
             # 5. 画框
@@ -126,7 +142,6 @@ def detect_img(queue):
 
 
 def main():
-    set_start_method('spawn')
     q = Queue()
     p_d = Process(target=detect_img, args=(q,))
     p_m = Process(target=mouse_ctrl_func, args=(q,))

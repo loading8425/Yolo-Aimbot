@@ -10,12 +10,15 @@ dxgi.cap()              640: 312        2560: 52
 mss.mss().grab()        640: 74         2560: 36
 """
 import numpy as np
-import win32ui, win32con, win32api
+import win32ui
+import win32con
+import win32api
 from PyQt5.QtWidgets import QApplication
 from PyQt5.QtGui import QImage
 import win32gui
 import sys
 import cv2
+import dxcam
 
 hwnd_title = dict()
 
@@ -43,12 +46,14 @@ def update_hwnd_title():
 def qImage2array(img):
     assert isinstance(img, QImage), "img must be a QtGui.QImage object"
     assert img.format() == QImage.Format.Format_RGB32, \
-        "img format must be QImage.Format.Format_RGB32, got: {}".format(img.format())
+        "img format must be QImage.Format.Format_RGB32, got: {}".format(
+            img.format())
     img_size = img.size()
     buffer: sip.voidptr = img.constBits()
     depth = (img.depth() // 8)
     buffer.setsize(img.width() * img.height() * depth)
-    arr = np.ndarray(shape=(img_size.height(), img_size.width(), depth), buffer=buffer, dtype=np.uint8)
+    arr = np.ndarray(shape=(img_size.height(), img_size.width(),
+                     depth), buffer=buffer, dtype=np.uint8)
     return arr
 
 
@@ -64,6 +69,17 @@ def grab_screen_pyqt_v2(window_title, grab_rect=None):
     img = qImage2array(img)
     return img
 
+
+
+
+def grab_screen_info():
+    
+    return 1120,560,1440,880
+
+def grab_screen_dxcam(cam, region):
+    #img = cam.get_latest_frame()
+    img = cam.grab(region=region)
+    return img
 
 def grab_screen_win32_v2(window_title, grab_rect=None):
     global is_show_not_find_window

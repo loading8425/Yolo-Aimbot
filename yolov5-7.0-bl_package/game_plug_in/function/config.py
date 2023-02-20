@@ -20,11 +20,11 @@ import os
 root_dir_name = 'game_plug_in'
 root_path = os.getcwd().split(root_dir_name)[0]  # game_plug_in 文件夹，不要随便改名字...
 
-weights = f'{root_path}{root_dir_name}\model\yolov5s.pt'  # 权重文件路径  看不懂的话只改 最后一个\后面的 文件名
+weights = f'{root_path}\{root_dir_name}\model\yolov5n.pt'  # 权重文件路径  看不懂的话只改 最后一个\后面的 文件名
 
-grab_window_title = 'PUBG：绝地求生 '  # 这个地方写 游戏窗口的名字
+grab_window_title = '守望先锋'  # 这个地方写 游戏窗口的名字
 screen_width, screen_height = 2560, 1440  # 屏幕分辨率
-grab_width, grab_height = 480, 480  # 截图大小
+grab_width, grab_height = 320, 320  # 截图大小
 
 top_window_width = 300  # 置顶 窗口大小
 is_show_top_window = True  # 是否显示置顶窗口
@@ -43,6 +43,6 @@ cv2_wait_ms = 1  # 每次检测之后程序睡眠的时间   这个数字有点�
 top_window_name = 'top_window'  # 置顶窗口的名字  不能是中文
 shot_interval_time = 0.1  # 开枪时间间隔
 data = f'{root_path}data\coco128.yaml'
-imgsz = [640, 640]
+imgsz = [320, 320]
 iou_thres = 0.45  # 交并集
 grab_rectangle = (int(screen_width / 2 - grab_width / 2), int(screen_height / 2 - grab_height / 2), grab_width, grab_height)

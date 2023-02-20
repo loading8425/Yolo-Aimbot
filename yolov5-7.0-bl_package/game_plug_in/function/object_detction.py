@@ -47,11 +47,11 @@ def interface_img(img, model):
     # Inference  推断
     with dt[1]:
         pred = model(im, augment=False, visualize=False)
-
+    
     # NMS  非极大值抑制
     with dt[2]:
         pred = non_max_suppression(pred, conf_thres, iou_thres, max_det=1000)
-
+    print(pred)
     box_list = []
     for i, det in enumerate(pred):  # per image
         gn = torch.tensor(img.shape)[[1, 0, 1, 0]]  # normalization gain whwh

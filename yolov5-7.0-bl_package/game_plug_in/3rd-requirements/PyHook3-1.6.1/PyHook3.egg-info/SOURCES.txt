@@ -1,0 +1,17 @@
+CHANGELOG.txt
+HookManager.py
+LICENSE.rst
+MANIFEST.in
+README.rst
+__init__.py
+aa hook.py
+cpyHook.i
+cpyHook.py
+doc.py
+example.py
+setup.cfg
+setup.py
+PyHook3.egg-info/PKG-INFO
+PyHook3.egg-info/SOURCES.txt
+PyHook3.egg-info/dependency_links.txt
+PyHook3.egg-info/top_level.txt
